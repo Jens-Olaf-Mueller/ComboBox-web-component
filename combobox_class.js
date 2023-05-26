@@ -268,7 +268,8 @@ class Combobox extends HTMLElement {
 
     /**
      * Method is called when the control is connected to a form element.
-     * @param {HTMLElement} form the parent form of the control
+     * Here can be applied some settings between the control an the form it's in.
+     * @param {HTMLElement} form The parent form of the control.
      */
     formAssociatedCallback(form) {
         // console.log(form, new FormData(form))
