@@ -15,14 +15,17 @@ h1 {
 
 #frmControls {
     /* display: flex;
-    flex-direction: row;
-    gap: 1rem; */
+    flex-direction: row; */
+    gap: 4rem;
     margin: 0 2rem;
     padding: 1.5rem;
     background-color: aliceblue;
     min-height: 33vh;
-    
-    
+}
+
+.div-combo {
+    background-color: rgb(215, 240, 255);
+    padding: 1rem 2rem;
 }
 
 .manual {
@@ -154,9 +157,10 @@ th:nth-child(2) {
     outline: none;
     border: 1px solid silver;
     border-radius: 4px;
+    /* accent-color: navy; */
 }
 
 .jom-input:focus {
-    border: 1px solid goldenrod;
-    background-color: lightyellow;
+    border: 1px solid green;
+    background-color: lightgoldenrodyellow;
 }

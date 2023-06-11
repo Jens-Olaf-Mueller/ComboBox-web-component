@@ -14,11 +14,32 @@
 <body>    
     <h1>Custom ComboBox - Demo</h1>
     <form id="frmControls" class="flx-row" autocomplete="off">
-        
+        <div class="flx-col div-combo">
+            <div data-control>
+                <label for="jomCombo"><span class="token-keyword">&ltJOM-COMBO&gt</span> </label>
+                <jom-combo id="jomCombo" options="Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru, Argentina" size="8" name="jom-combo" extendable placeholder="  -- select a country --"></jom-combo>
+                <!-- <jom-combo id="jomCombo" size="8" name="jom-combo" extendable ></jom-combo> -->
+            </div><br>
+
+            <div data-control>
+                <label for="inpSize">Size</label>
+                <input id="inpSize" type="number" min="2" max="12" value="8">
+            </div>
+            <div data-control="checkbox">
+                <input id="chkAllowAdd" type="checkbox" checked>
+                <label for="chkAllowAdd">Extendable</label>                    
+            </div>
+            <div data-control="checkbox">
+                <input id="chkSorted" type="checkbox">
+                <label for="chkSorted">Sorted</label>                    
+            </div>
+        </div>
+
         <div class="flx-col">
             <div data-control>
                 <label for="oldSelect"><span class="token-keyword">&ltSELECT&gt</span> </label>
                 <select name="select" id="selOld">
+                    <option disabled selected value> -- select a country -- </option>
                     <option value="Germany">Germany</option>
                     <option value="United Kingdom">United Kingdom</option>
                     <option value="Panama">Panama</option>
@@ -53,41 +74,32 @@
             <br><br>
             <button type="submit" class="btn-submit">Submit Form</button>
         </div>
-
-        <div class="flx-col">
-            <div data-control>
-                <label for="jomCombo"><span class="token-keyword">&ltJOM-COMBO&gt</span> </label>
-                <jom-combo id="jomCombo" options="Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru" size="12" name="jom-combo" extendable></jom-combo>
-            </div><br>
-            <div data-control>
-                <label for="inpSize">Size</label>
-                <input id="inpSize" type="number" min="2" max="12" value="12">
-            </div>
-            <div data-control="checkbox">
-                <input id="chkAllowAdd" type="checkbox" checked>
-                <label for="chkAllowAdd">Extendable</label>                    
-            </div>
-            <div data-control="checkbox">
-                <input id="chkSorted" type="checkbox">
-                <label for="chkSorted">Sorted</label>                    
-            </div>
-        </div>
     </form>
 
     <div class="manual">
         <p>
-            This new web component unites the functionality of the common HTML-elements <span class="token-keyword">&ltINPUT&gt</span>, <span class="token-keyword">&ltSELECT&gt</span> and <span class="token-keyword">&ltDATALIST&gt</span> and extends it by some new features. <br>
+            This new web component unites the functionality of the common HTML-elements <span class="token-keyword">&ltINPUT&gt</span>, <span class="token-keyword">&ltSELECT&gt</span> and <span class="token-keyword">&ltDATALIST&gt</span> and extends it by some new features.<br>
+            You can add a list of options to the control. This list can be dropped down or collapsed by clicking the arrow on the right side. This way the control works like a common select element.<br><br>
+            The control also can be used like an input element. In difference to this one, the dropdown list will be expanded, as long as a containing list item matches to the input.<br>
+            If the input does <i><strong>not</strong></i> match to any list item, a plus icon will appear on the right side of the control in order to indicate that a new entry can be added. This behaviour can be enabled or disabled by the <a href="#spnExtendable"><span class="attribute">extendable</span></a> attribute. <br>
+            By click on the plus icon or pressing the enter key while the icon is visible, the new input will be added to the list and the icon disappears. <br>
+            This behaviour differs from the common datalist HTML-element.<br><br>
+            The control supports all other <strong>global</strong> <span class="token-keyword">&ltINPUT&gt</span>-tag related HTML attributes. A value can be assigned either by the HTML <a href="#spnValue"><span class="attribute">value</span></a> attribute or by the JavaScript <span class="code">.value</span> property.
+            <br><br>
             The component is form-associated, so that it can be used in common <span class="token-keyword">&ltFORM&gt</span>-elements and submits it's current value to the connected name attribute. <br>
             To verify this behaviour, select an entry from the list or make an input and press the submit button. The submitted values will be displayed in the browser's adress bar. <br>
-            All attributes are also accessable by JavaScript via the corresponding properties. Example:<br><br>
+            All attributes are also accessable by JavaScript via the corresponding properties.<br>
+            In JavaScript the items of the dropdown list can be also assigned as an array.<br><br>
             <pre class="code">
                 <code >
-    <span class="token-keyword">const</span> <span class="token-constante">combo</span> = document.getElementById(<span class="token-string">'myComboBox'</span>);
+    <span class="token-keyword">const</span> <span class="token-constante">combo</span> = document.getElementById(<span class="token-string">'myComboBox'</span>);   
+    <span class="token-constante">combo</span>.options = <span class="token-string">'Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru'</span>;
     <span class="token-comment">// options can also be assigned as an array:</span>    
-    <span class="token-comment">// combo.options = ['Germany','United Kingdom','Panama','Netherlands'...]</span>    
-    <span class="token-constante">combo</span>.options = <span class="token-string">'Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru'</span>; 
+    <span class="token-comment">// combo.options = ['Germany','United Kingdom','Panama','Netherlands', ...]</span> 
     <span class="token-constante">combo</span>.size = 8; <span class="token-comment">// default = 6</span>
     <span class="token-constante">combo</span>.extendable = <span class="token-boolean">true</span>;
+    <span class="token-constante">combo</span>.sorted = <span class="token-boolean">true</span>;
+    <span class="token-constante">combo</span>.value = <span class="token-string">'Egypt'</span>;
                 </code>
             </pre>
         </p><br>
@@ -99,7 +111,7 @@
             </tr>
             <tr>
                 <td><span class="attribute">options</span> </td>
-                <td>Provides the list of items in the dropdown list. Can also be assigned by JavaScript:
+                <td>Provides the list of items in the dropdown list. Can also be assigned by JavaScript.
 
                 </td>
                 <td> 
@@ -110,12 +122,12 @@
                 <td><span class="attribute">size</span> </td>
                 <td>Determines the length of the shown items, when the list is dropped down.</td>
                 <td>
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">size="6"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">size="8"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
                 </td>
             </tr>                    
             <tr>
-                <td><span class="attribute">extendable</span> </td>
-                <td>A boolean attribute that determines if a new, unknown entry can be added to the list when the ENTER-key is hit. If the attribute is present, it is considered to be TRUE, otherwise as FALSE. To indicate a new entry, a plus sign shows up at the right side of the control.</td>
+                <td><span class="attribute" id="spnExtendable">extendable</span> </td>
+                <td>A boolean attribute that determines if a new, unknown entry can be added to the list when the <span class="code">ENTER</span>-key is hit. If the attribute is present, it is considered to be <span class="token-boolean">true</span>, otherwise as <span class="token-boolean">false</span>. To indicate a new entry, a plus sign shows up at the right side of the control, which can be clicked with the same effect.</td>
                 <td>
                     <span class="token-keyword">&ltjom-combo</span> <span class="attribute">extendable</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
                 </td>
@@ -127,8 +139,14 @@
                     <span class="token-keyword">&ltjom-combo</span> <span class="attribute">sorted</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
                 </td>
             </tr> 
+            <tr>
+                <td><span class="attribute" id="spnValue">value</span> </td>
+                <td>With the value attribute you can set or read the control's value. If the value is not in the list, the plus icon will be displayed to indecate it can be added to the list.</td>
+                <td>
+                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">value="Egypt"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                </td>
+            </tr>
         </table>
     </div>
-    
 </body>
 </html>

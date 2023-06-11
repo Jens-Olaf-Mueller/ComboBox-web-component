@@ -5,8 +5,9 @@ const extendable = document.getElementById('chkAllowAdd');
 
 runApp();
 function runApp() {
-    // combo.options = 'Uruguay, Germany, United Kingdom, France, Italy, Greece, United States, Uganda,Portugal, Poland, Pakistan, Peru';
+    // combo.options =['Uruguay', '   Germany', 'United Kingdom', 'France   ', 'Italy', 'Greece', 'United States', 'Uganda','Portugal', 'Poland', 'Pakistan', 'Peru','Argentina'];
     // combo.value = 'Italy';
+    // combo.accentColor = 'red';
     size.addEventListener('input', function() {
         combo.setAttribute('size',this.value);
     })

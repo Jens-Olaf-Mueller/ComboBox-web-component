@@ -1,5 +1,8 @@
-const TMP_COMBOSTYLE = document.createElement('template');
-const _ID = 'inpCombo'; // keep the main id on one place!
+const TMP_COMBOSTYLE = document.createElement('template'),
+      TMP_PLUSSIGN = document.createElement('template'),
+      TMP_ARROW = document.createElement('template'),
+      inpID = 'inpCombo'; // keep the main id on one place!
+
 TMP_COMBOSTYLE.innerHTML = `
     <style>
         :host {
@@ -17,39 +20,13 @@ TMP_COMBOSTYLE.innerHTML = `
             font-size: inherit;
         }
 
-        #divCombo.extended-list::after {
-            display: block;
-            content: '';
+        .svg-arrow, .svg-plus {
             position: absolute;
             top: 2px;
-            right: -20px;
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(#008000 0 0), 
-                        linear-gradient(#008000 0 0);
-            background-position: center;
-            background-size: 50% 3px,3px 50%;
-            background-repeat: no-repeat;
-        }
-
-        #divArrow.jom-arrow-down {
-            position: absolute;
-            margin: 4px;
-            width: 7px;
-            height: 7px;
-            right: 4px;
-            top: 8px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.5);
-            border-right: 2px solid rgba(0, 0, 0, 0.5);
-            transform: translate(0, -50%) rotate(45deg);
+            right: 1px;
             cursor: pointer;
             z-index: 9999;
         }
-
-        #divArrow.jom-arrow-up {
-            top: 12px;
-            transform: translate(0, -50%) rotate(225deg);
-        } 
 
         .jom-combo ul {
             position: absolute;
@@ -80,11 +57,38 @@ TMP_COMBOSTYLE.innerHTML = `
         li.jom-list-item[selected] {
             background-color: cornflowerblue;
         }
+        
+        :host[hidden], [hidden] {
+            display: none;
+        }
     </style>`;
+
+TMP_PLUSSIGN.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 752 752"
+        id="svgPlus" 
+        class="svg-plus" 
+        fill="cornflowerblue" hidden>
+        <g transform="translate(0,752) scale(0.1,-0.1)">
+            <path d="M3478 4803 l-3 -758 -757 -3 -758 -2 0 -280 0 -280 758 -2 757 -3 3
+            -757 2 -758 280 0 280 0 2 758 3 757 758 3 757 2 0 280 0 280 -757 2 -758 3
+            -3 758 -2 757 -280 0 -280 0 -2 -757z"/>
+        </g>
+    </svg>`;
+
+TMP_ARROW.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+        id="svgArrow"
+        class="svg-arrow"
+        viewBox="0 0 100 100" 
+        fill="cornflowerblue" hidden>
+        <path d="M20 35 l30 30 l30-30z"/>
+    </svg>`;
 
 class Combobox extends HTMLElement {
     #size = 6;
     #dropped = false;
+    #accentColor = 'cornflowerblue'; // "#000000C0" (gray)
     #listindex = -1;
     #options = null;
     #internals = null;
@@ -98,9 +102,17 @@ class Combobox extends HTMLElement {
         return null;
     }
     set options(newOpts) {
-        this.#options = newOpts.split(',').map(opt => opt.trim());
-        if (this.#options.length == 0) return;
-        if (!this.hasAttribute('options')) this.setAttribute('options', newOpts);
+        if (newOpts == null) return;
+        if (!(newOpts instanceof Array)) newOpts = newOpts.split(',');
+        this.#options = newOpts.map(opt => opt.trim());
+        if (this.#options.length == 0) {
+            this.showButton(false);
+            return;
+        }        
+        const attrOpts = this.#options.join(','),
+              button = this.value.length > 0 && !this.#options.includes(this.value) ? 'plus' : 'arrow';
+        this.showButton(button);
+        if (!this.hasAttribute('options')) this.setAttribute('options', attrOpts);
     }
 
 
@@ -114,7 +126,7 @@ class Combobox extends HTMLElement {
             if(!this.hasAttribute('extendable')) this.setAttribute('extendable','');
         } else {
             this.removeAttribute('extendable');
-            this.shadowRoot.getElementById('divCombo').classList.remove('extended-list');
+            this.getElement('svgPlus').setAttribute('hidden','');
         }        
     }
 
@@ -143,21 +155,37 @@ class Combobox extends HTMLElement {
     /**
      * Returns or set's the value of the combobox.
      */
-    get value() { return this.shadowRoot.getElementById(_ID).value; }
+    get value() { 
+        const input = this.getElement(inpID);
+        return input ? input.value : '';
+    }
     set value(newVal) { 
-        if (!this.hasAttribute('value')) this.setAttribute('value', newVal);
-        const input = this.shadowRoot.getElementById(_ID);
+        if (!this.hasAttribute('value') && newVal !== '') this.setAttribute('value', newVal);
+        const input = this.getElement(inpID),
+              plus = this.getElement('svgPlus');
         if (input) input.value = newVal;
+        if (this.extendable && newVal !== '') {
+            if (!this.#options || !this.#options.includes(newVal)) {
+                if (plus) this.showButton('plus');
+            }
+        }
     }
 
     /**
      * Returns or sets the name attribute.
      */
-    get name() { return this.shadowRoot.getElementById(_ID).name; }
+    get name() { return this.getElement(inpID).name; }
     set name(newName) {
         if (!this.hasAttribute('name')) this.setAttribute('name', newName);
-        const input = this.shadowRoot.getElementById(_ID);
+        const input = this.getElement(inpID);
         if (input) input.name = newName;
+    }
+
+    get placeholder() { return this.hasAttribute('placeholder') ? this.getAttribute('placeholder') : ''; }
+    set placeholder(newVal) {
+        const input = this.getElement(inpID);
+        if (input) input.placeholder = newVal;
+        if (!this.hasAttribute('placeholder')) this.setAttribute('placeholder', newVal);
     }
 
 
@@ -168,11 +196,13 @@ class Combobox extends HTMLElement {
     get isDropped() { return this.#dropped; }
     set isDropped(flag) {
         this.#dropped = this.isBoolean(flag);
-        const arrow = this.shadowRoot.getElementById('divArrow');
+        const arrow = this.getElement('svgArrow');
         if (this.#dropped) {
-            arrow.classList.add('jom-arrow-up');
+            // arrow.classList.add('jom-arrow-up');
+            arrow.setAttribute('transform','scale(-1 -1)');
         } else {
-            arrow.classList.remove('jom-arrow-up');
+            // arrow.classList.remove('jom-arrow-up');
+            arrow.removeAttribute('transform');
         }
     }
 
@@ -180,7 +210,7 @@ class Combobox extends HTMLElement {
     /**
      * Returns a reference to the component's list element.
      */
-    get list() { return this.shadowRoot.getElementById('lstCombo'); }
+    get list() { return this.getElement('lstCombo'); }
 
 
     /**
@@ -190,10 +220,28 @@ class Combobox extends HTMLElement {
 
 
     /**
+     * Returns or assignes the accent color for the control.
+     * Value can be assigned by CSS or JavaScript. 
+     * Default value is 'cornflowerblue' from Chrome or Firefox.
+     */
+    get accentColor() {
+        const accColor = getComputedStyle(this.getElement(inpID)).getPropertyValue('accent-color');
+        return accColor === 'auto' ? this.#accentColor : accColor;
+    }
+    set accentColor(color) {
+        // TODO Verifying if color is valid! (Can be done with canvas element...)
+        this.#accentColor = color;
+        const arrow = this.getElement('svgArrow'),
+              plus = this.getElement('svgPlus');
+        if (arrow) arrow.setAttribute('fill', color);
+        if (plus) plus.setAttribute('fill', color);
+    }
+
+    /**
      * Returns a list of attributes to be observed.
      */
     static get observedAttributes() {
-        return ['options','size', 'value','name','extendable','sorted'];
+        return ['options','size', 'value','name','extendable','sorted','placeholder'];
     }
     // static get formAssociated() { return true; }
     static formAssociated = true;
@@ -214,6 +262,7 @@ class Combobox extends HTMLElement {
         this.onArrowClick = this.onArrowClick.bind(this);
         this.onInput = this.onInput.bind(this);
         this.onKeydown = this.onKeydown.bind(this);
+        this.addItem = this.addItem.bind(this);
         this.#internals = this.attachInternals();
     }
 
@@ -224,8 +273,14 @@ class Combobox extends HTMLElement {
      */
     connectedCallback() {
         this.#createChildren();
-        const input = this.shadowRoot.getElementById(_ID),
-              arrow = this.shadowRoot.getElementById('divArrow');
+        this.#updateAttributes();
+        const input = this.getElement(inpID),
+              arrow = this.getElement('svgArrow'),
+              plus = this.getElement('svgPlus'),
+              size = `${input.clientHeight}px`;
+        this.setAttributes(plus, {height: size, width: size});
+        this.setAttributes(arrow, {height: size, width: size});
+        plus.addEventListener('click', this.addItem);
         input.addEventListener('input', this.onInput);
         input.addEventListener('keydown', this.onKeydown);
         arrow.addEventListener('click', this.onArrowClick);
@@ -238,8 +293,10 @@ class Combobox extends HTMLElement {
      * when the component is removed from DOM.
      */
     disconnectedCallback() { 
-        const input = this.shadowRoot.getElementById(_ID),
-              arrow = this.shadowRoot.getElementById('divArrow');
+        const input = this.getElement(inpID),
+              arrow = this.getElement('svgArrow'),
+              plus = this.getElement('svgPlus');
+        plus.removeEventListener('click', this.addItem);
         input.removeEventListener('input', this.onInput);
         input.removeEventListener('keydown', this.onKeydown);
         arrow.removeEventListener('click', this.onArrowClick);
@@ -261,6 +318,7 @@ class Combobox extends HTMLElement {
         if (attrName == 'size') this.size = newVal;
         if (attrName == 'name') this.name = newVal;
         if (attrName == 'value') this.value = newVal;
+        if (attrName == 'placeholder') this.placeholder = newVal;
         if (attrName == 'extendable') this.extendable = this.hasAttribute('extendable') ? true : false;
         if (attrName == 'sorted') this.sorted = this.hasAttribute('sorted') ? true : false;
     }
@@ -273,6 +331,7 @@ class Combobox extends HTMLElement {
      */
     formAssociatedCallback(form) {
         // console.log(form, new FormData(form))
+        // for advanced purposes...
     }
 
     /**
@@ -282,10 +341,14 @@ class Combobox extends HTMLElement {
     onInput(evt) {
         const searchFor = evt.target.value.toLowerCase(), 
               arrMatches = [],
-              wrapper = this.shadowRoot.getElementById('divCombo');
+              plus = this.getElement('svgPlus');
         this.dropdownCollapse();
-        wrapper.classList.remove('extended-list');
+        plus.setAttribute('hidden','');
         if (searchFor.length == 0) return;
+        if (!this.options) {
+            if (this.extendable) this.showButton('plus');
+            return;
+        }
         for (let i = 0; i < this.options.length; i++) {
             const item = this.options[i];
             if (item.substring(0, searchFor.length).toLowerCase() === searchFor) {
@@ -294,11 +357,30 @@ class Combobox extends HTMLElement {
         }
         this.#internals.setFormValue(this.value, this.value);
         if (arrMatches.length == 0) {
-            if(this.extendable) wrapper.classList.add('extended-list');
+            if (this.extendable) this.showButton('plus');
             this.#listindex = -1;
             return;
         }
+        this.showButton('arrow');
         this.dropdownShow(arrMatches);        
+    }
+
+
+    /**
+     * Adds a new entry to the list.
+     * If the list is expanded it will be collapsed after adding it.
+     */
+    addItem(item) {
+        if (this.extendable) {
+            if (item instanceof PointerEvent || item == undefined) item = this.value;
+            if (this.#options == null) {
+                this.#options = new Array(item);
+            } else if (!this.#options.includes(item)) {
+                this.#options.push(item);                
+            }
+            this.showButton('arrow');
+        }
+        if (this.isDropped) this.dropdownCollapse();
     }
 
 
@@ -323,25 +405,23 @@ class Combobox extends HTMLElement {
      * @param {event} evt Keydown event of the input element.
      */
     onKeydown(evt) {    
-        const key = evt.key, 
-              wrapper = this.shadowRoot.getElementById('divCombo');
+        const key = evt.key;
         if (key == 'Enter') {
             if (!this.isDropped) {
-                if (this.extendable) {
-                    if (!this.#options.includes(this.value)) {
-                        this.#options.push(this.value);
-                        wrapper.classList.remove('extended-list');
-                    }
-                }
+                this.addItem();
             } else if (this.selectedItem) {
-                this.shadowRoot.getElementById(_ID).value = this.selectedItem.innerText;
+                this.getElement(inpID).value = this.selectedItem.innerText;
                 this.dropdownCollapse();
                 this.#internals.setFormValue(this.value, this.value);
             }
         } 
         if (this.isDropped) {
             if (key == 'Escape') this.dropdownCollapse();
-            if (key.includes('Arrow')) this.#scroll(key);            
+            if (key.includes('Arrow')) {
+                evt.preventDefault();
+                this.#scroll(key);
+                
+            }             
         }       
     }
 
@@ -350,7 +430,7 @@ class Combobox extends HTMLElement {
      * Takes over the active list-item in the input field.
      */
     onItemClick(evt) {
-        this.shadowRoot.getElementById(_ID).value = evt.target.innerText;
+        this.getElement(inpID).value = evt.target.innerText;
         this.#internals.setFormValue(this.value, this.value);
         this.dropdownCollapse();
     }
@@ -367,6 +447,28 @@ class Combobox extends HTMLElement {
         do {
             this.#listindex++;
         } while (!list[this.#listindex].hasAttribute('selected'));
+    }
+
+    /**
+     * Enables or disables either the dropdown arrow or the plus symbol.
+     * type == 'false' indicates that no button is displayed.
+     * @param {string | boolean} type The button to be displayed or disabled.
+     */
+    showButton(type) {
+        const arrow = this.getElement('svgArrow'),
+              plus = this.getElement('svgPlus');
+        // if (!arrow || !plus) return;
+        if (!(arrow && plus)) return;
+        if (type === 'arrow') {
+            arrow.removeAttribute('hidden');
+            plus.setAttribute('hidden','');
+        } else if (type === 'plus') {       
+            plus.removeAttribute('hidden');   
+            arrow.setAttribute('hidden','');
+        } else if (type === false) {
+            arrow.setAttribute('hidden','');
+            plus.setAttribute('hidden','');
+        }
     }
 
 
@@ -388,7 +490,7 @@ class Combobox extends HTMLElement {
             item.addEventListener('mousemove', (evt) => this.onMouseHover(evt));
             this.list.appendChild(item);            
             if (i >= this.size - 1 && !this.list.classList.contains('scroll')) {
-                const height = item.offsetHeight * this.size;
+                const height = item.clientHeight * this.size;
                 this.list.classList.add('scroll');
                 this.setAttributes(this.list, {style: `max-height: ${height}px;`});
             }
@@ -424,19 +526,20 @@ class Combobox extends HTMLElement {
      * - div (wrapper)
      * - imput element
      * - ul element (droplist)
-     * - drop arrow (div)
+     * - drop arrow (svg-image)
+     * - plus sign (svg-image)
      */
     #createChildren() {
         const wrapper = document.createElement('div'),
-              arrow = document.createElement('div'),
               input = document.createElement('input'),
               list = document.createElement('ul');
         this.setAttributes(wrapper, {id: 'divCombo', class: 'jom-combo'});
-        this.setAttributes(arrow, {id: 'divArrow', class: 'jom-arrow-down'});
-        this.setAttributes(input, {type: 'text', id: _ID, class: 'jom-input', autocomplete: 'off'});
-        this.setAttributes(list, {id: 'lstCombo', class: 'cbo-list'})
-        wrapper.append(input, arrow, list);
-        this.shadowRoot.append(wrapper, TMP_COMBOSTYLE.content.cloneNode(true));
+        this.setAttributes(input, {type: 'text', id: inpID, class: 'jom-input', autocomplete: 'off'});
+        this.setAttributes(list, {id: 'lstCombo', class: 'cbo-list'});        
+        wrapper.append(input, list,
+                       TMP_PLUSSIGN.content.cloneNode(true),
+                       TMP_ARROW.content.cloneNode(true));
+        this.shadowRoot.append(wrapper,TMP_COMBOSTYLE.content.cloneNode(true));
     }
 
 
@@ -457,7 +560,19 @@ class Combobox extends HTMLElement {
             this.#listindex = bound;
         }
         list[this.#listindex].setAttribute('selected','');
+        //TODO Improve "scrollIntoview": only inside the dropdownlist!
         list[this.#listindex].scrollIntoView(flag);
+    }
+
+
+    /**
+     * Updates all HTML-given attributes after connectedCallback!
+     */
+    #updateAttributes() {
+        this.accentColor = this.accentColor; // read the computed style and assign the CSS-setting or default!
+        this.value = this.getAttribute('value') || '';
+        this.placeholder =  this.getAttribute('placeholder') || '';
+        this.options = this.getAttribute('options') || null;
     }
 
 
@@ -470,6 +585,16 @@ class Combobox extends HTMLElement {
         Object.keys(attributes).forEach(attr => {
             element.setAttribute(attr, attributes[attr]);
         });
+    }
+
+
+    /**
+     * Returns the shadow root element with the given id or 'null' if not found.
+     * @param {string | null} id The id of the wanted child element from shadow root.
+     * @returns HTML-element.
+     */
+    getElement(id) {
+        return this.shadowRoot.getElementById(id);
     }
 
 
