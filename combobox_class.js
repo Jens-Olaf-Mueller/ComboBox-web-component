@@ -65,15 +65,12 @@ TMP_COMBOSTYLE.innerHTML = `
 
 TMP_PLUSSIGN.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 752 752"
-        id="svgPlus" 
-        class="svg-plus" 
-        fill="cornflowerblue" hidden>
-        <g transform="translate(0,752) scale(0.1,-0.1)">
-            <path d="M3478 4803 l-3 -758 -757 -3 -758 -2 0 -280 0 -280 758 -2 757 -3 3
-            -757 2 -758 280 0 280 0 2 758 3 757 758 3 757 2 0 280 0 280 -757 2 -758 3
-            -3 758 -2 757 -280 0 -280 0 -2 -757z"/>
-        </g>
+        id="svgPlus"
+        class="svg-plus"    
+        viewBox="0 0 200 200"
+        stroke-width="20"
+        stroke="cornflowerblue" hidden>
+        <path d="M40 100 h120 M100 40 v120z"/>
     </svg>`;
 
 TMP_ARROW.innerHTML = `
@@ -144,7 +141,7 @@ class Combobox extends HTMLElement {
     }
 
     /**
-     * Returns or determines the count of list items.
+     * Returns or determines the count of displayed list items.
      */
     get size() { return this.#size; }
     set size(newSize) {
@@ -181,6 +178,10 @@ class Combobox extends HTMLElement {
         if (input) input.name = newName;
     }
 
+
+    /**
+     * Supplies the placeholder attribute to the internal input field.
+     */
     get placeholder() { return this.hasAttribute('placeholder') ? this.getAttribute('placeholder') : ''; }
     set placeholder(newVal) {
         const input = this.getElement(inpID);
@@ -234,7 +235,7 @@ class Combobox extends HTMLElement {
         const arrow = this.getElement('svgArrow'),
               plus = this.getElement('svgPlus');
         if (arrow) arrow.setAttribute('fill', color);
-        if (plus) plus.setAttribute('fill', color);
+        if (plus) plus.setAttribute('stroke', color);
     }
 
     /**
@@ -243,7 +244,11 @@ class Combobox extends HTMLElement {
     static get observedAttributes() {
         return ['options','size', 'value','name','extendable','sorted','placeholder'];
     }
-    // static get formAssociated() { return true; }
+    
+
+    /**
+     * Makes the control available in HTML form tags.
+     */
     static formAssociated = true;
 
     
@@ -343,8 +348,11 @@ class Combobox extends HTMLElement {
               arrMatches = [],
               plus = this.getElement('svgPlus');
         this.dropdownCollapse();
-        plus.setAttribute('hidden','');
-        if (searchFor.length == 0) return;
+        this.showButton(false);
+        if (searchFor.length == 0) {
+            if (this.options) this.showButton('arrow');
+            return;
+        }
         if (!this.options) {
             if (this.extendable) this.showButton('plus');
             return;
@@ -367,7 +375,7 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * Adds a new entry to the list.
+     * Adds a new entry to the list if the 'extendable' attribute is set.
      * If the list is expanded it will be collapsed after adding it.
      */
     addItem(item) {
@@ -398,12 +406,14 @@ class Combobox extends HTMLElement {
 
     /**
      * Provides keyboard support for the control:<br>
-     * - Enter takes over a new entry if the flag 'extendable' is set to 'true'.
-     * - If the dropdown list is displayed and an item selected, it takes over the item.
-     * - ArrowUp | ArrowDown applies scolling inside the list.
-     * - Escape closes the open dropdown list.
+     * - ENTER-key takes over a new entry if the 'extendable' attribute is set.
+     * - If the dropdown list is displayed and an item is selected, ENTER takes over the item.
+     * - ARROW_UP | ARROW_DOWN applies scolling inside the list.
+     * - ESCAPE closes the open dropdown list.
      * @param {event} evt Keydown event of the input element.
      */
+    // TODO implementing DEL-key to delete an item! 
+    // ==> also adding an X-button on each item to support mouse events and mibiles.
     onKeydown(evt) {    
         const key = evt.key;
         if (key == 'Enter') {
@@ -457,7 +467,6 @@ class Combobox extends HTMLElement {
     showButton(type) {
         const arrow = this.getElement('svgArrow'),
               plus = this.getElement('svgPlus');
-        // if (!arrow || !plus) return;
         if (!(arrow && plus)) return;
         if (type === 'arrow') {
             arrow.removeAttribute('hidden');
