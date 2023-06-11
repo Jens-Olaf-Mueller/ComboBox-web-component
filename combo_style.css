@@ -8,7 +8,8 @@ body {
     font-size: 1.05rem;
 }
 
-h1 {
+h1, h2 {
+    margin: 1rem 0;
     text-align: center;
     color: navy;
 }

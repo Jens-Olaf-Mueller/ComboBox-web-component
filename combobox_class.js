@@ -425,7 +425,7 @@ class Combobox extends HTMLElement {
      * @param {event} evt Keydown event of the input element.
      */
     // TODO implementing DEL-key to delete an item! 
-    // ==> also adding an X-button on each item to support mouse events and mibiles.
+    // ==> also adding an X-button on each item to support mouse events and mobile devices.
     onKeydown(evt) {    
         const key = evt.key;
         if (key == 'Enter') {

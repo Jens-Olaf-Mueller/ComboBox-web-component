@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Components</title>
+    <title>ComboBox Demo</title>
 
-    <link rel="stylesheet" href="/combo_style.css" data-control>
-    <script defer src="/combobox_class.js"></script>
-    <script defer src="/demo.js"></script>
+    <link rel="stylesheet" href="combo_style.css" data-control>
+    <script defer src="combobox_class.js"></script>
+    <script defer src="demo.js"></script>
 
 </head>
 <body>    
@@ -92,6 +92,9 @@
             In JavaScript the items of the dropdown list can be also assigned as an array.<br>
             The method <span class="code">.addListItem</span> allows to add single items to the list later.
             <br><br>
+
+            <h2>Using in JavaScript</h2>
+
             <pre class="code">
                 <code >
     <span class="token-keyword">const</span> <span class="token-constante">combo</span> = document.getElementById(<span class="token-string">'myComboBox'</span>);   
@@ -101,15 +104,19 @@
     <span class="token-constante">combo</span>.size = 8; <span class="token-comment">// default = 6</span>
     <span class="token-constante">combo</span>.extendable = <span class="token-boolean">true</span>;
     <span class="token-constante">combo</span>.sorted = <span class="token-boolean">true</span>;
+    <span class="token-constante">combo</span>.addListItem(<span class="token-string">'Mexico'</span>);
     <span class="token-constante">combo</span>.value = <span class="token-string">'Egypt'</span>;
                 </code>
             </pre>
         </p><br>
+
+        <h2>Using HTML attributes</h2>
+        
         <table>
             <tr>
                 <th>Attribute</th>
                 <th>Description</th>
-                <th>Example</th>
+                <th>HTML Example</th>
             </tr>
             <tr>
                 <td><span class="attribute">options</span> </td>
