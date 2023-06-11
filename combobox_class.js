@@ -91,6 +91,17 @@ class Combobox extends HTMLElement {
     #internals = null;
 
     /**
+     * This returns all writable (and readable) properties of this class.
+     * If those wanted who are readonly, the code must be changed to: => typeof descriptor.get...
+     */
+    get properties() { 
+        //https://stackoverflow.com/questions/39310890/get-all-static-getters-in-a-class
+        const props = Object.entries(Object.getOwnPropertyDescriptors(Combobox.prototype))
+        .filter(([key, descriptor]) => typeof descriptor.set === 'function').map(([key]) => key);
+        return props;
+    }
+
+    /**
      * Returns or assigns the displayed list items.
      */
     get options() {
@@ -278,7 +289,7 @@ class Combobox extends HTMLElement {
      */
     connectedCallback() {
         this.#createChildren();
-        this.#updateAttributes();
+        this.#updateProperties();
         const input = this.getElement(inpID),
               arrow = this.getElement('svgArrow'),
               plus = this.getElement('svgPlus'),
@@ -578,11 +589,14 @@ class Combobox extends HTMLElement {
     /**
      * Updates all HTML-given attributes after connectedCallback!
      */
-    #updateAttributes() {
-        this.accentColor = this.accentColor; // read the computed style and assign the CSS-setting or default!
-        this.value = this.getAttribute('value') || '';
-        this.placeholder =  this.getAttribute('placeholder') || '';
-        this.options = this.getAttribute('options') || null;
+    #updateProperties() { 
+        Object.values(this.properties).forEach((prop) => {
+            if (Combobox.prototype.hasOwnProperty(prop)) {
+                let value = this[prop];                
+                delete this[prop];
+                this[prop] = value;
+            }
+        });
     }
 
 
