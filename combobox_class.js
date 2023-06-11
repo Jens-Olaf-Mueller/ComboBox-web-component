@@ -267,7 +267,7 @@ class Combobox extends HTMLElement {
         this.onArrowClick = this.onArrowClick.bind(this);
         this.onInput = this.onInput.bind(this);
         this.onKeydown = this.onKeydown.bind(this);
-        this.addItem = this.addItem.bind(this);
+        this.addListItem = this.addListItem.bind(this);
         this.#internals = this.attachInternals();
     }
 
@@ -285,7 +285,7 @@ class Combobox extends HTMLElement {
               size = `${input.clientHeight}px`;
         this.setAttributes(plus, {height: size, width: size});
         this.setAttributes(arrow, {height: size, width: size});
-        plus.addEventListener('click', this.addItem);
+        plus.addEventListener('click', this.addListItem);
         input.addEventListener('input', this.onInput);
         input.addEventListener('keydown', this.onKeydown);
         arrow.addEventListener('click', this.onArrowClick);
@@ -301,12 +301,13 @@ class Combobox extends HTMLElement {
         const input = this.getElement(inpID),
               arrow = this.getElement('svgArrow'),
               plus = this.getElement('svgPlus');
-        plus.removeEventListener('click', this.addItem);
+        plus.removeEventListener('click', this.addListItem);
         input.removeEventListener('input', this.onInput);
         input.removeEventListener('keydown', this.onKeydown);
         arrow.removeEventListener('click', this.onArrowClick);
         this.removeEventListener('blur', this.dropdownCollapse);
     }
+
 
     /**
      * This method is called when an attribute has been changed or is new assigned.
@@ -378,7 +379,7 @@ class Combobox extends HTMLElement {
      * Adds a new entry to the list if the 'extendable' attribute is set.
      * If the list is expanded it will be collapsed after adding it.
      */
-    addItem(item) {
+    addListItem(item) {
         if (this.extendable) {
             if (item instanceof PointerEvent || item == undefined) item = this.value;
             if (this.#options == null) {
@@ -388,7 +389,7 @@ class Combobox extends HTMLElement {
             }
             this.showButton('arrow');
         }
-        if (this.isDropped) this.dropdownCollapse();
+        this.dropdownCollapse();
     }
 
 
@@ -418,7 +419,7 @@ class Combobox extends HTMLElement {
         const key = evt.key;
         if (key == 'Enter') {
             if (!this.isDropped) {
-                this.addItem();
+                this.addListItem();
             } else if (this.selectedItem) {
                 this.getElement(inpID).value = this.selectedItem.innerText;
                 this.dropdownCollapse();
