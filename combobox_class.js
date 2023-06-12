@@ -92,7 +92,9 @@ class Combobox extends HTMLElement {
 
     /**
      * This returns all writable (and readable) properties of this class.
-     * If those wanted who are readonly, the code must be changed to: => typeof descriptor.get...
+     * If those wanted who are readonly, the code must be changed from: <br>
+     * ...=> typeof descriptor.set  TO: ...=> typeof descriptor.GET...
+     * @readonly
      */
     get properties() { 
         //https://stackoverflow.com/questions/39310890/get-all-static-getters-in-a-class
@@ -126,7 +128,9 @@ class Combobox extends HTMLElement {
 
     /**
      * Returns or determines wether the dropdown list can be extended by new entries.
-     * If property is 'true', a new entry can be added by pressing the enter key.
+     * If property is 'true' or the corresponding HTML attribute is set,
+     * a new entry can be added by pressing the enter key or clicking the + symbol
+     * that appears on the right side of the control.
      */
     get extendable() { return this.hasAttribute('extendable'); }
     set extendable(flag) {
@@ -221,12 +225,14 @@ class Combobox extends HTMLElement {
 
     /**
      * Returns a reference to the component's list element.
+     * @readonly
      */
     get list() { return this.getElement('lstCombo'); }
 
 
     /**
      * Returns the current selected list item.
+     * @readonly
      */
     get selectedItem() { return this.shadowRoot.querySelector('li[selected]'); }
 
@@ -251,6 +257,7 @@ class Combobox extends HTMLElement {
 
     /**
      * Returns a list of attributes to be observed.
+     * @readonly
      */
     static get observedAttributes() {
         return ['options','size', 'value','name','extendable','sorted','placeholder'];
@@ -258,18 +265,19 @@ class Combobox extends HTMLElement {
     
 
     /**
-     * Makes the control available in HTML form tags.
+     * Connects the control with HTML forms so that it's value will be submitted.
+     * @readonly 
      */
     static formAssociated = true;
 
     
     /**
      * Creates a new HTML element that unites the features of the select- and the datalist-element.<br>
-     * The control provides a few additional features:
-     * - assigning the list as string or string array
-     * - adding new entries to the list if property 'extendable' is set to 'true'
-     * - setting the length of the displayed dropdown list
-     * - displaying the list sorted or unsorted
+     * The control provides a few additional features: <br>
+     * - assigning the list as string or string array <br>
+     * - adding new entries to the list if property 'extendable' is set to 'true' <br>
+     * - setting the length of the displayed dropdown list <br>
+     * - displaying the list sorted or unsorted <br>
      */
     constructor() {
         super();
@@ -285,7 +293,7 @@ class Combobox extends HTMLElement {
 
     /**
      * Method is automatically called when the component is connected to the DOM.
-     * Right moment to add event listeners
+     * Right moment to add event listeners and updating HTML attributes.
      */
     connectedCallback() {
         this.#createChildren();
@@ -352,7 +360,7 @@ class Combobox extends HTMLElement {
     }
 
     /**
-     * Filters, creates and displays the matching items of the list.
+     * Filters, creates and displays the items of the list matching to the input.
      * @param {event} evt The input event of the input element.
      */
     onInput(evt) {
@@ -377,7 +385,11 @@ class Combobox extends HTMLElement {
         }
         this.#internals.setFormValue(this.value, this.value);
         if (arrMatches.length == 0) {
-            if (this.extendable) this.showButton('plus');
+            if (this.extendable) {
+                this.showButton('plus');
+            } else if (this.options) {
+                this.showButton('arrow');
+            }
             this.#listindex = -1;
             return;
         }
@@ -417,11 +429,11 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * Provides keyboard support for the control:<br>
-     * - ENTER-key takes over a new entry if the 'extendable' attribute is set.
-     * - If the dropdown list is displayed and an item is selected, ENTER takes over the item.
-     * - ARROW_UP | ARROW_DOWN applies scolling inside the list.
-     * - ESCAPE closes the open dropdown list.
+     * Provides keyboard support for the control: <br>
+     * - ENTER-key takes over a new entry if the 'extendable' attribute is set. <br>
+     * - If the dropdown list is displayed and an item is selected, ENTER takes over the item. <br>
+     * - ARROW_UP | ARROW_DOWN applies scolling inside the list. <br>
+     * - ESCAPE closes the open dropdown list. <br>
      * @param {event} evt Keydown event of the input element.
      */
     // TODO implementing DEL-key to delete an item! 
@@ -497,7 +509,7 @@ class Combobox extends HTMLElement {
      * Shows the dropdown list.<br>
      * The method is called either by click on the arrow button
      * or by input in the field. 
-     * @param {[string]} options String array of options to be displayed in the dropdown list.
+     * @param {string | string[]} options String array of options to be displayed in the dropdown list.
      */
     dropdownShow(options) {
         this.dropdownCollapse();
@@ -613,7 +625,7 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * Returns the shadow root element with the given id or 'null' if not found.
+     * Helper function that returns the shadow root element with the given id or 'null' if not found.
      * @param {string | null} id The id of the wanted child element from shadow root.
      * @returns HTML-element.
      */
