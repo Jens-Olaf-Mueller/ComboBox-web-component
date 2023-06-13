@@ -158,7 +158,7 @@ th:nth-child(2) {
     outline: none;
     border: 1px solid silver;
     border-radius: 4px;
-    /* accent-color: navy; */
+    /* accent-color: #0075ff; */
 }
 
 .jom-input:focus {

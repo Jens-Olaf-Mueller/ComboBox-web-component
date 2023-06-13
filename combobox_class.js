@@ -55,7 +55,7 @@ TMP_COMBOSTYLE.innerHTML = `
         }
 
         li.jom-list-item[selected] {
-            background-color: cornflowerblue;
+            background-color: #0075ff;
         }
         
         :host[hidden], [hidden] {
@@ -69,7 +69,7 @@ TMP_PLUSSIGN.innerHTML = `
         class="svg-plus"    
         viewBox="0 0 200 200"
         stroke-width="20"
-        stroke="cornflowerblue" hidden>
+        stroke="#0075ff" hidden>
         <path d="M40 100 h120 M100 40 v120z"/>
     </svg>`;
 
@@ -78,14 +78,14 @@ TMP_ARROW.innerHTML = `
         id="svgArrow"
         class="svg-arrow"
         viewBox="0 0 100 100" 
-        fill="cornflowerblue" hidden>
+        fill="#0075ff" hidden>
         <path d="M20 35 l30 30 l30-30z"/>
     </svg>`;
 
 class Combobox extends HTMLElement {
     #size = 6;
     #dropped = false;
-    #accentColor = 'cornflowerblue'; // "#000000C0" (gray)
+    #accentColor = '#0075ff'; // "#000000C0" (gray)
     #listindex = -1;
     #options = null;
     #internals = null;
@@ -156,7 +156,7 @@ class Combobox extends HTMLElement {
     }
 
     /**
-     * Returns or determines the count of displayed list items.
+     * Returns or determines the count of displayed list items in the dropdown list.
      */
     get size() { return this.#size; }
     set size(newSize) {
@@ -240,14 +240,14 @@ class Combobox extends HTMLElement {
     /**
      * Returns or assignes the accent color for the control.
      * Value can be assigned by CSS or JavaScript. 
-     * Default value is 'cornflowerblue' from Chrome or Firefox.
+     * Default value is '#0075ff' from Chrome or Firefox.
      */
     get accentColor() {
         const accColor = getComputedStyle(this.getElement(inpID)).getPropertyValue('accent-color');
         return accColor === 'auto' ? this.#accentColor : accColor;
     }
     set accentColor(color) {
-        // TODO Verifying if color is valid! (Can be done with canvas element...)
+        if (!CSS.supports('color', color)) return;
         this.#accentColor = color;
         const arrow = this.getElement('svgArrow'),
               plus = this.getElement('svgPlus');
@@ -272,7 +272,7 @@ class Combobox extends HTMLElement {
 
     
     /**
-     * Creates a new HTML element that unites the features of the select- and the datalist-element.<br>
+     * Creates a new HTML element that unites the features of the input, select- and the datalist-element.<br>
      * The control provides a few additional features: <br>
      * - assigning the list as string or string array <br>
      * - adding new entries to the list if property 'extendable' is set to 'true' <br>
@@ -583,8 +583,7 @@ class Combobox extends HTMLElement {
     #scroll(key) {
         const list = this.shadowRoot.querySelectorAll('li.jom-list-item'),
               step = (key === 'ArrowDown') ? 1 : -1,
-              bound = (key === 'ArrowDown') ? 0 : list.length - 1,
-              flag = (key === 'ArrowDown') ? false : true;
+              bound = (key === 'ArrowDown') ? 0 : list.length - 1;
         this.#listindex += step;
         if (this.selectedItem) {
             this.selectedItem.removeAttribute('selected');
@@ -593,8 +592,7 @@ class Combobox extends HTMLElement {
             this.#listindex = bound;
         }
         list[this.#listindex].setAttribute('selected','');
-        //TODO Improve "scrollIntoview": only inside the dropdownlist!
-        list[this.#listindex].scrollIntoView(flag);
+        list[this.#listindex].scrollIntoView({block: 'center'});
     }
 
 
@@ -641,7 +639,7 @@ class Combobox extends HTMLElement {
      */
     isBoolean(expression) {
         if (expression === true || expression === false) return expression;
-        switch(expression?.toLowerCase()?.trim()){
+        switch(expression?.toLowerCase()?.trim()) {
             case 'true': 
             case 'yes':
             case 'on':
