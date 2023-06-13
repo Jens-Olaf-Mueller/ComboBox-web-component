@@ -103,6 +103,7 @@ class Combobox extends HTMLElement {
         return props;
     }
 
+
     /**
      * Returns or assigns the displayed list items.
      */
@@ -155,6 +156,7 @@ class Combobox extends HTMLElement {
         }
     }
 
+
     /**
      * Returns or determines the count of displayed list items in the dropdown list.
      */
@@ -163,6 +165,7 @@ class Combobox extends HTMLElement {
         this.#size = Number(newSize);
         if (!this.hasAttribute('size')) this.setAttribute('size', newSize);
     }
+
 
     /**
      * Returns or set's the value of the combobox.
@@ -182,6 +185,7 @@ class Combobox extends HTMLElement {
             }
         }
     }
+
 
     /**
      * Returns or sets the name attribute.
@@ -255,8 +259,11 @@ class Combobox extends HTMLElement {
         if (plus) plus.setAttribute('stroke', color);
     }
 
+
     /**
-     * Returns a list of attributes to be observed.
+     * Returns a list of attributes to be observed. <br>
+     * Any attribute contained in this list will trigger the attributeChangedCallback method.
+     * @see #{@link attributeChangedCallback} 
      * @readonly
      */
     static get observedAttributes() {
@@ -329,10 +336,13 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * This method is called when an attribute has been changed or is new assigned.
-     * It is also executed when an HTML-element is connected to the DOM:
-     * i.e. >INPUT name="surname"< would cause that.
-     * If the attribute's value has not been changed, the method returns immediately.
+     * @description This method is called when an attribute has been changed,
+     * is new assigned or when an HTML-element is connected to the DOM. <br>
+     * The attribute must be listed in the observedAttributes property.
+     * @see #{@link observedAttributes}<br>
+     * 
+     * For example: &lt INPUT name="surname" &gt would trigger this method.
+     * If the attribute's value has not been changed, the function returns immediately.
      * @param {string} attrName Name of the changed attribute.
      * @param {any} oldVal The old value of the attribute.
      * @param {any} newVal The new value of the attribute.
@@ -358,6 +368,7 @@ class Combobox extends HTMLElement {
         // console.log(form, new FormData(form))
         // for advanced purposes...
     }
+
 
     /**
      * Filters, creates and displays the items of the list matching to the input.
