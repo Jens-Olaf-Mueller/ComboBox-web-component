@@ -55,6 +55,7 @@ TMP_COMBOSTYLE.innerHTML = `
         }
 
         li.jom-list-item[selected] {
+            color: white;
             background-color: #0075ff;
         }
         
@@ -339,13 +340,13 @@ class Combobox extends HTMLElement {
      * @description This method is called when an attribute has been changed,
      * is new assigned or when an HTML-element is connected to the DOM. <br>
      * The attribute must be listed in the observedAttributes property.
-     * @see #{@link observedAttributes}<br>
      * 
      * For example: &lt INPUT name="surname" &gt would trigger this method.
      * If the attribute's value has not been changed, the function returns immediately.
      * @param {string} attrName Name of the changed attribute.
      * @param {any} oldVal The old value of the attribute.
      * @param {any} newVal The new value of the attribute.
+     * @see #{@link observedAttributes}
      */
     attributeChangedCallback(attrName, oldVal, newVal) {
         if (oldVal === newVal) return; // leave immediately if there are no changes!
@@ -534,7 +535,7 @@ class Combobox extends HTMLElement {
             item.addEventListener('mousemove', (evt) => this.onMouseHover(evt));
             this.list.appendChild(item);            
             if (i >= this.size - 1 && !this.list.classList.contains('scroll')) {
-                const height = item.clientHeight * this.size;
+                const height = item.clientHeight * this.size + 1;
                 this.list.classList.add('scroll');
                 this.setAttributes(this.list, {style: `max-height: ${height}px;`});
             }
