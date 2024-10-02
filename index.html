@@ -6,24 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ComboBox Demo</title>
 
-    <link rel="stylesheet" href="combo_style.css" data-control>
-    <script defer src="combobox_class.js"></script>
-    <script defer src="demo.js"></script>
+    <link rel="stylesheet" href="./demo.css">
+    <link rel="stylesheet" href="./combo_style.css" data-control>
+    <script defer src="./combobox_class.js"></script>
+    <script defer src="./demo.js"></script>
 
 </head>
 <body>    
     <h1>Custom ComboBox - Demo</h1>
     <form id="frmControls" class="flx-row" autocomplete="off">
-        <div class="flx-col div-combo">
-            <div data-control>
-                <label for="jomCombo"><span class="token-keyword">&ltJOM-COMBO&gt</span> </label>
-                <jom-combo id="jomCombo" options="Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru, Argentina" size="8" name="jom-combo" extendable placeholder="  -- select a country --"></jom-combo>
-                <!-- <jom-combo id="jomCombo" size="8" name="jom-combo" placeholder="  -- select a country --" extendable ></jom-combo> -->
+        <div class="ctrl-wrapper">
+            <div data-control="dropdown">
+                <label><span class="token-keyword">&ltCOMBO-BOX&gt</span> </label>
+                <combo-box id="jomCombo" type="combo" size="8" name="combo-box" extendable
+                    placeholder="  -- select a country --"
+                    options="Germany, 
+                            United Kingdom, 
+                            Panama, 
+                            Netherlands, 
+                            Portugal, 
+                            Italy, 
+                            Greece, 
+                            Poland, 
+                            United States, 
+                            France, 
+                            Peru, 
+                            Argentina">
+                </combo-box>
             </div><br>
+            <hr><br>
 
             <div data-control>
                 <label for="inpSize">Size</label>
-                <input id="inpSize" type="number" min="2" max="12" value="8">
+                <input id="inpSize" type="number" min="2" max="12">
             </div>
             <div data-control="checkbox">
                 <input id="chkAllowAdd" type="checkbox" checked>
@@ -33,45 +48,57 @@
                 <input id="chkSorted" type="checkbox">
                 <label for="chkSorted">Sorted</label>                    
             </div>
+            <div data-control>
+                <div data-control="checkbox">
+                    <input type="radio" name="combo-type" id="optCombo" value="combo" checked>
+                    <label for="optCombo">Combobox</label>
+                </div>
+                <div data-control="checkbox">
+                    <input type="radio" name="combo-type" id="optList" value="list">
+                    <label for="optList">Listbox</label>
+                </div>
+            </div>
         </div>
 
         <div class="flx-col">
-            <div data-control>
-                <label for="oldSelect"><span class="token-keyword">&ltSELECT&gt</span> </label>
-                <select name="select" id="selOld">
-                    <option disabled selected value> -- select a country -- </option>
-                    <option value="Germany">Germany</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Panama">Panama</option>
-                    <option value="Netherlands">Netherlands</option>
-                    <option value="Portugal">Portugal</option>
-                    <option value="Italy">Italy</option>
-                    <option value="Greece">Greece</option>
-                    <option value="Poland">Poland</option>
-                    <option value="United States">United States</option>
-                    <option value="France">France</option>
-                    <option value="Peru">Peru</option>
-                </select>
+            <div class="ctrl-wrapper">
+                <div data-control="dropdown">
+                    <label for="oldSelect"><span class="token-keyword">&ltSELECT&gt</span> </label>
+                    <select name="select" id="oldSelect">
+                        <option disabled selected value> -- select a country -- </option>
+                        <option value="Germany">Germany</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Panama">Panama</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Portugal">Portugal</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Greece">Greece</option>
+                        <option value="Poland">Poland</option>
+                        <option value="United States">United States</option>
+                        <option value="France">France</option>
+                        <option value="Peru">Peru</option>
+                    </select>
+                </div>
             </div>
-            
-            <div data-control>
-                <label for="dataList"><span class="token-keyword">&ltDATALIST&gt</span> </label>
-                <input id="dataList" list="lstCountries" name="datalist">
-                <datalist id="lstCountries">
-                    <option value="Germany">Germany</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Panama">Panama</option>
-                    <option value="Netherlands">Netherlands</option>
-                    <option value="Portugal">Portugal</option>
-                    <option value="Italy">Italy</option>
-                    <option value="Greece">Greece</option>
-                    <option value="Poland">Poland</option>
-                    <option value="United States">United States</option>
-                    <option value="France">France</option>
-                    <option value="Peru">Peru</option>
-                </datalist>
+            <div class="ctrl-wrapper">
+                <div data-control="dropdown">
+                    <label for="dataList"><span class="token-keyword">&ltDATALIST&gt</span> </label>
+                    <input id="dataList" list="lstCountries" name="datalist">
+                    <datalist id="lstCountries">
+                        <option value="Germany">Germany</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Panama">Panama</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Portugal">Portugal</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Greece">Greece</option>
+                        <option value="Poland">Poland</option>
+                        <option value="United States">United States</option>
+                        <option value="France">France</option>
+                        <option value="Peru">Peru</option>
+                    </datalist>
+                </div>
             </div>
-            <br><br>
             <button type="submit" class="btn-submit">Submit Form</button>
         </div>
     </form>
@@ -90,7 +117,7 @@
             To verify this behaviour, select an entry from the list or make an input and press the submit button. The submitted values will be displayed in the browser's adress bar. <br>
             All attributes are also accessable by JavaScript via the corresponding properties.<br>
             In JavaScript the items of the dropdown list can be also assigned as an array.<br>
-            The method <span class="code">.addListItem</span> allows to add single items to the list later.
+            The method <span class="code">.addListItem</span> allows to add single items to the list later, while the <span class="code">.removeListItem</span> method removes an existing item from the list. It can be called either by click on the cross on the right side of the list item, or external. In that case an argument is required to determine which item is supposed to be removed. The argument can be numeric (meaning the index) or a string, that means the item itself.
             <br><br>
             <strong>For detailed information <a href="./out/Combobox.html" target="_blank">see the full documentation</a> of the combobox.</strong> 
             <br>
@@ -98,18 +125,19 @@
 
             <pre class="code">
                 <code >
-    <span class="token-keyword">const</span> <span class="token-constante">combo</span> = document.getElementById(<span class="token-string">'myComboBox'</span>);   
+    <span class="token-keyword">const</span> <span class="token-constante">combo</span> = document.getElementById(<span class="token-string">'myComboBox'</span>);
+    <span class="token-constante">combo</span>.type = <span class="token-string">'combo'</span>; <span class="token-comment">// default! If set to 'list', the control works like a dropdown list</span>
     <span class="token-constante">combo</span>.options = <span class="token-string">'Germany, United Kingdom, Panama, Netherlands, Portugal, Italy, Greece, Poland, United States, France, Peru'</span>;
     <span class="token-comment">// options can also be assigned as an array:</span>    
     <span class="token-comment">// combo.options = ['Germany','United Kingdom','Panama','Netherlands', ...]</span> 
     <span class="token-constante">combo</span>.size = 8; <span class="token-comment">// default = 6</span>
     <span class="token-constante">combo</span>.extendable = <span class="token-boolean">true</span>;
     <span class="token-constante">combo</span>.sorted = <span class="token-boolean">true</span>;
-    <span class="token-constante">combo</span>.addListItem(<span class="token-string">'Mexico'</span>);
     <span class="token-constante">combo</span>.value = <span class="token-string">'Egypt'</span>;
+    <span class="token-constante">combo</span>.addListItem(<span class="token-string">'Mexico'</span>);    
+    <span class="token-constante">combo</span>.removeListItem(<span class="token-string">2</span>)<span class="token-comment"> // removes the second item (='Panama') from list </span>;    
                 </code>
             </pre>
-        </p><br>
 
         <h2>Using HTML attributes</h2>
         
@@ -120,40 +148,48 @@
                 <th>HTML Example</th>
             </tr>
             <tr>
+                <td><span class="attribute">type</span> </td>
+                <td>Determines wether the Combobox works as a simple dropdown list (<span class="attribute">type="list"</span>) or if it provides the full new functionality below. By default the type is set to <span class="attribute">combo</span>.
+                </td>
+                <td> 
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">type="list"</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
+                </td>
+            </tr>
+            <tr>
                 <td><span class="attribute">options</span> </td>
                 <td>Provides the list of items in the dropdown list. Can also be assigned by JavaScript.
 
                 </td>
                 <td> 
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">options="Germany,Italy,France"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">options="Germany,Italy,France"</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
                 </td>
             </tr>
             <tr>
                 <td><span class="attribute">size</span> </td>
-                <td>Determines the length of the shown items, when the list is dropped down.</td>
+                <td>Determines the length of the shown items, when the list is dropped down. Default is 6.</td>
                 <td>
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">size="8"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">size="8"</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
                 </td>
             </tr>                    
             <tr>
                 <td><span class="attribute" id="spnExtendable">extendable</span> </td>
-                <td>A boolean attribute that determines if a new, unknown entry can be added to the list when the <span class="code">ENTER</span>-key is hit. If the attribute is present, it is considered to be <span class="token-boolean">true</span>, otherwise as <span class="token-boolean">false</span>. To indicate a new entry, a plus sign shows up at the right side of the control, which can be clicked with the same effect.</td>
+                <td>A boolean attribute that determines if a new, unknown entry can be added to the list when the <span class="code">ENTER</span>-key is hit. Also an existing item can be removed by clicking on the cross at the right side of the list item. If the attribute is present, it is considered to be <span class="token-boolean">true</span>, otherwise as <span class="token-boolean">false</span>. To indicate a new entry can be addes, a plus sign shows up at the right side of the control, which can be clicked with the same effect.</td>
                 <td>
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">extendable</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">extendable</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
                 </td>
             </tr>
             <tr>
                 <td><span class="attribute">sorted</span> </td>
                 <td>Boolean attribute that determines wether the list is sorted or not.</td>
                 <td>
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">sorted</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">sorted</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
                 </td>
             </tr> 
             <tr>
                 <td><span class="attribute" id="spnValue">value</span> </td>
                 <td>With the value attribute you can set or read the control's value. If the value is not in the list, the plus icon will be displayed to indecate it can be added to the list.</td>
                 <td>
-                    <span class="token-keyword">&ltjom-combo</span> <span class="attribute">value="Egypt"</span><span class="token-keyword">&gt&lt/jom-combo&gt</span>
+                    <span class="token-keyword">&ltcombo-box</span> <span class="attribute">value="Egypt"</span><span class="token-keyword">&gt&lt/combo-box&gt</span>
                 </td>
             </tr>
         </table>

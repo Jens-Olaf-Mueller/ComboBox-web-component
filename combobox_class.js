@@ -1,41 +1,56 @@
 const TMP_COMBOSTYLE = document.createElement('template'),
       TMP_PLUSSIGN = document.createElement('template'),
       TMP_ARROW = document.createElement('template'),
-      inpID = 'inpCombo'; // keep the main id on one place!
+      TMP_CLOSE = document.createElement('template');
 
 TMP_COMBOSTYLE.innerHTML = `
     <style>
         :host {
             display: inline-block;
-            height: 100%;
+            border: 1px solid silver;
+            padding: 0;
+        }
+
+        :host:(input:disabled) {
+        
+            border: 2px solid red;
         }
 
         #divCombo.jom-combo {
             height: 100%;
             display: inline-block;
-            position: relative;
+            position: relative;            
+            border-radius: inherit;           
         }
 
         #inpCombo.jom-input {
-            font-size: inherit;
+            height: 100%;
+            /* outline: 2px solid transparent; */
+            padding: 0 0 0 0.5rem;
+            outline: none;
+            border: none;
+            border-radius: inherit;
+            font: inherit;
         }
 
-        .svg-arrow, .svg-plus {
-            position: absolute;
-            top: 2px;
-            right: 1px;
-            cursor: pointer;
-            z-index: 9999;
+        .jom-input:disabled {
+            background-color: field;
+            color: fieldtext;
         }
 
         .jom-combo ul {
             position: absolute;
             width: 100%;
-            z-index: 999999;
+            z-index: 99998;
             list-style: none;
             padding: unset;
             margin: unset;
+            margin-top: 1px;
             overflow-y: hidden;
+        }
+
+        .jom-combo ul:has(li) {
+            border-bottom: 1px solid silver;
         }
 
         .jom-combo ul.scroll {
@@ -43,11 +58,13 @@ TMP_COMBOSTYLE.innerHTML = `
         }
 
         li.jom-list-item {
-            padding: 0 3px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             border-left: 1px solid silver;
             border-right: 1px solid silver;
             background-color: field;
-            cursor: pointer;
+            padding: var(--combo-item-padding, 0.25rem 0.5rem);
         }
 
         li.jom-list-item:last-child {
@@ -55,38 +72,80 @@ TMP_COMBOSTYLE.innerHTML = `
         }
 
         li.jom-list-item[selected] {
-            color: white;
-            background-color: #0075ff;
+            color: var(--combo-selected-color, white);
+            background-color: var(--combo-selected-background-color, #0075ff);
         }
-        
+
+        .combo-icon {
+            position: absolute;
+            height: var(--combo-arrow-size, 1.25rem);
+            width: var(--combo-arrow-size, 1.25rem);
+            top: 50%;
+            transform: translateY(-50%);
+            right: 1px;
+            cursor: pointer;
+            z-index: 99999;
+        }
+
+        .combo-delete {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1;
+            height: 0.75rem;
+            cursor: pointer;
+        }
+
+        .combo-delete:hover svg {
+            mix-blend-mode: exclusion;
+            fill: var(--combo-selected-color, white);
+            transform: scale(1.25);
+        }
+
+        .combo-icon svg {
+            stroke: var(--combo-accent-color, #0075ff);
+            fill: var(--combo-accent-color, #0075ff);
+        }
+
+        :host([disabled]) svg {
+            stroke: #aaa;
+            fill: #aaa;
+        }
+
         :host[hidden], [hidden] {
             display: none;
         }
     </style>`;
 
 TMP_PLUSSIGN.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        id="svgPlus"
-        class="svg-plus"    
-        viewBox="0 0 200 200"
-        stroke-width="20"
-        stroke="#0075ff" hidden>
-        <path d="M40 100 h120 M100 40 v120z"/>
-    </svg>`;
+    <div id="divPlus" class="combo-icon" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 200 200"
+            stroke-width="20">
+            <path d="M40 100 h120 M100 40 v120z"/>
+        </svg>
+    </div>`;
 
 TMP_ARROW.innerHTML = `
+    <div id="divArrow" class="combo-icon" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg"
+            id="svgArrow"
+            viewBox="0 0 100 100">
+            <path d="M20 35 l30 30 l30-30z"/>
+        </svg>
+    </div>`;
+
+TMP_CLOSE.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg"
-        id="svgArrow"
-        class="svg-arrow"
-        viewBox="0 0 100 100" 
-        fill="#0075ff" hidden>
-        <path d="M20 35 l30 30 l30-30z"/>
+        viewBox="0 0 16 16"
+        fill="#000000A0">
+        <path d="M8 8.707l3.646 3.647.708-.707L8.707 8l3.647-3.646-.707-.708L8 7.293 4.354 3.646l-.707.708L7.293 8l-3.646 3.646.707.708L8 8.707z"/>
     </svg>`;
 
 class Combobox extends HTMLElement {
     #size = 6;
+    #type = 'combo';
     #dropped = false;
-    #accentColor = '#0075ff'; // "#000000C0" (gray)
     #listindex = -1;
     #options = null;
     #internals = null;
@@ -98,7 +157,7 @@ class Combobox extends HTMLElement {
      * @readonly
      */
     get properties() { 
-        //https://stackoverflow.com/questions/39310890/get-all-static-getters-in-a-class
+        // https://stackoverflow.com/questions/39310890/get-all-static-getters-in-a-class
         const props = Object.entries(Object.getOwnPropertyDescriptors(Combobox.prototype))
         .filter(([key, descriptor]) => typeof descriptor.set === 'function').map(([key]) => key);
         return props;
@@ -115,33 +174,49 @@ class Combobox extends HTMLElement {
     }
     set options(newOpts) {
         if (newOpts == null) return;
-        if (!(newOpts instanceof Array)) newOpts = newOpts.split(',');
+        // handle HTML-array like: ['Germany','United Kindom','Poland'] (regEx removes braces)
+        if (typeof newOpts === 'string') {
+            newOpts = newOpts.replaceAll(/[^,\p{L}\d\s]+/gu, '').split(',');
+        }
         this.#options = newOpts.map(opt => opt.trim());
         if (this.#options.length == 0) {
             this.showButton(false);
             return;
-        }        
+        }
         const attrOpts = this.#options.join(','),
-              button = this.value.length > 0 && !this.#options.includes(this.value) ? 'plus' : 'arrow';
-        this.showButton(button);
+              icon = this.value.length > 0 && !this.#options.includes(this.value) ? 'plus' : 'arrow';
+        this.showButton(icon);
         if (!this.hasAttribute('options')) this.setAttribute('options', attrOpts);
+    }
+
+    /**
+     * Determines wether the Combobox works as a simple dropdown list 
+     * or if it provides the full new functionality below. 
+     * By default the type is set to combo.
+     * @param {string} newType combo (default) | list
+     */
+    get type() { return this.#type; }
+    set type(newType) {
+        newType = newType?.trim();
+        if (!'list combo'.includes(newType)) return;
+        this.#type = newType;
+        this.setAttribute('type', newType);
+        if (this.input) {
+            this.input.toggleAttribute('disabled', (newType === 'list') || this.disabled);
+            if (newType === 'list') this.input.value = '';
+        }
     }
 
 
     /**
-     * Returns or determines wether the dropdown list can be extended by new entries.
+     * Returns or determines wether the dropdown list can be extended by new entries or not.
      * If property is 'true' or the corresponding HTML attribute is set,
      * a new entry can be added by pressing the enter key or clicking the + symbol
      * that appears on the right side of the control.
      */
     get extendable() { return this.hasAttribute('extendable'); }
     set extendable(flag) {
-        if (this.isBoolean(flag)) {
-            if(!this.hasAttribute('extendable')) this.setAttribute('extendable','');
-        } else {
-            this.removeAttribute('extendable');
-            this.getElement('svgPlus').setAttribute('hidden','');
-        }        
+        this.toggleAttribute('extendable', this.toBoolean(flag));
     }
 
 
@@ -150,11 +225,17 @@ class Combobox extends HTMLElement {
      */
     get sorted() { return this.hasAttribute('sorted'); }
     set sorted(flag) {
-        if (this.isBoolean(flag)) {
-            if(!this.hasAttribute('sorted')) this.setAttribute('sorted','');
-        } else {
-            this.removeAttribute('sorted');
-        }
+        this.toggleAttribute('sorted', this.toBoolean(flag));
+    }
+
+
+    /**
+     * Returns or sets the control's disabled / enabled state.
+     */
+    get disabled() { return this.hasAttribute('disabled'); }
+    set disabled(flag) {
+        this.toggleAttribute('disabled', this.toBoolean(flag));
+        this.input.toggleAttribute('disabled', this.toBoolean(flag));
     }
 
 
@@ -171,15 +252,13 @@ class Combobox extends HTMLElement {
     /**
      * Returns or set's the value of the combobox.
      */
-    get value() { 
-        const input = this.getElement(inpID);
-        return input ? input.value : '';
+    get value() {
+        return this.input ? this.input.value : '';
     }
     set value(newVal) { 
         if (!this.hasAttribute('value') && newVal !== '') this.setAttribute('value', newVal);
-        const input = this.getElement(inpID),
-              plus = this.getElement('svgPlus');
-        if (input) input.value = newVal;
+        const plus = this.getElement('divPlus');
+        if (this.input) this.input.value = newVal;
         if (this.extendable && newVal !== '') {
             if (!this.#options || !this.#options.includes(newVal)) {
                 if (plus) this.showButton('plus');
@@ -191,11 +270,10 @@ class Combobox extends HTMLElement {
     /**
      * Returns or sets the name attribute.
      */
-    get name() { return this.getElement(inpID).name; }
+    get name() { return this.input.name; }
     set name(newName) {
         if (!this.hasAttribute('name')) this.setAttribute('name', newName);
-        const input = this.getElement(inpID);
-        if (input) input.name = newName;
+        this.input.name = newName;
     }
 
 
@@ -204,8 +282,7 @@ class Combobox extends HTMLElement {
      */
     get placeholder() { return this.hasAttribute('placeholder') ? this.getAttribute('placeholder') : ''; }
     set placeholder(newVal) {
-        const input = this.getElement(inpID);
-        if (input) input.placeholder = newVal;
+        this.input.placeholder = newVal;
         if (!this.hasAttribute('placeholder')) this.setAttribute('placeholder', newVal);
     }
 
@@ -216,13 +293,11 @@ class Combobox extends HTMLElement {
      */
     get isDropped() { return this.#dropped; }
     set isDropped(flag) {
-        this.#dropped = this.isBoolean(flag);
+        this.#dropped = this.toBoolean(flag);
         const arrow = this.getElement('svgArrow');
         if (this.#dropped) {
-            // arrow.classList.add('jom-arrow-up');
             arrow.setAttribute('transform','scale(-1 -1)');
         } else {
-            // arrow.classList.remove('jom-arrow-up');
             arrow.removeAttribute('transform');
         }
     }
@@ -243,42 +318,30 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * Returns or assignes the accent color for the control.
-     * Value can be assigned by CSS or JavaScript. 
-     * Default value is '#0075ff' from Chrome or Firefox.
+     * Returns a reference to the component's input element.
+     * @readonly
      */
-    get accentColor() {
-        const accColor = getComputedStyle(this.getElement(inpID)).getPropertyValue('accent-color');
-        return accColor === 'auto' ? this.#accentColor : accColor;
-    }
-    set accentColor(color) {
-        if (!CSS.supports('color', color)) return;
-        this.#accentColor = color;
-        const arrow = this.getElement('svgArrow'),
-              plus = this.getElement('svgPlus');
-        if (arrow) arrow.setAttribute('fill', color);
-        if (plus) plus.setAttribute('stroke', color);
-    }
+    get input() { return this.getElement('inpCombo'); }
 
 
     /**
      * Returns a list of attributes to be observed. <br>
      * Any attribute contained in this list will trigger the attributeChangedCallback method.
-     * @see #{@link attributeChangedCallback} 
+     * @see #{@link attributeChangedCallback}
      * @readonly
      */
     static get observedAttributes() {
-        return ['options','size', 'value','name','extendable','sorted','placeholder'];
+        return ['options','type','size','value','name','extendable','sorted','placeholder','disabled'];
     }
-    
+
 
     /**
      * Connects the control with HTML forms so that it's value will be submitted.
-     * @readonly 
+     * @readonly
      */
     static formAssociated = true;
 
-    
+
     /**
      * Creates a new HTML element that unites the features of the input, select- and the datalist-element.<br>
      * The control provides a few additional features: <br>
@@ -290,11 +353,13 @@ class Combobox extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({mode: 'open', delegatesFocus: true});
-        this.importStyleSheet();
+        this.#createChildren();
+        // this.importStyleSheet();
         this.onArrowClick = this.onArrowClick.bind(this);
         this.onInput = this.onInput.bind(this);
         this.onKeydown = this.onKeydown.bind(this);
         this.addListItem = this.addListItem.bind(this);
+        this.removeListItem = this.removeListItem.bind(this);
         this.#internals = this.attachInternals();
     }
 
@@ -304,35 +369,36 @@ class Combobox extends HTMLElement {
      * Right moment to add event listeners and updating HTML attributes.
      */
     connectedCallback() {
-        this.#createChildren();
         this.#updateProperties();
-        const input = this.getElement(inpID),
-              arrow = this.getElement('svgArrow'),
-              plus = this.getElement('svgPlus'),
-              size = `${input.clientHeight}px`;
+        if (!this.hasAttribute('role')) this.setAttribute('role', 'listbox');
+        if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', 0);
+        const arrow = this.getElement('divArrow'),
+              plus = this.getElement('divPlus'),
+              size = `${this.input.clientHeight}px`;
         this.setAttributes(plus, {height: size, width: size});
         this.setAttributes(arrow, {height: size, width: size});
-        plus.addEventListener('click', this.addListItem);
-        input.addEventListener('input', this.onInput);
-        input.addEventListener('keydown', this.onKeydown);
+        plus.addEventListener('pointerdown', this.addListItem);
+        this.input.addEventListener('input', this.onInput);
+        this.input.addEventListener('keydown', this.onKeydown);
+        // TODO: this.addEventListener('keydown', this.onKeydown);
+        // expanding the list in list mode by arrow down click?!
         arrow.addEventListener('click', this.onArrowClick);
-        this.addEventListener('blur', this.dropdownCollapse);
+        this.addEventListener('blur', this.collapse);
     }
 
 
     /**
-     * Method to clean up the event listeners and other stuff 
+     * Method to clean up the event listeners and other stuff
      * when the component is removed from DOM.
      */
-    disconnectedCallback() { 
-        const input = this.getElement(inpID),
-              arrow = this.getElement('svgArrow'),
-              plus = this.getElement('svgPlus');
+    disconnectedCallback() {
+        const arrow = this.getElement('divArrow'),
+              plus = this.getElement('divPlus');
         plus.removeEventListener('click', this.addListItem);
-        input.removeEventListener('input', this.onInput);
-        input.removeEventListener('keydown', this.onKeydown);
+        this.input.removeEventListener('input', this.onInput);
+        this.input.removeEventListener('keydown', this.onKeydown);
         arrow.removeEventListener('click', this.onArrowClick);
-        this.removeEventListener('blur', this.dropdownCollapse);
+        this.removeEventListener('blur', this.collapse);
     }
 
 
@@ -340,7 +406,7 @@ class Combobox extends HTMLElement {
      * @description This method is called when an attribute has been changed,
      * is new assigned or when an HTML-element is connected to the DOM. <br>
      * The attribute must be listed in the observedAttributes property.
-     * 
+     *
      * For example: &lt INPUT name="surname" &gt would trigger this method.
      * If the attribute's value has not been changed, the function returns immediately.
      * @param {string} attrName Name of the changed attribute.
@@ -351,12 +417,14 @@ class Combobox extends HTMLElement {
     attributeChangedCallback(attrName, oldVal, newVal) {
         if (oldVal === newVal) return; // leave immediately if there are no changes!
         if (attrName == 'options') this.options = newVal;
+        if (attrName == 'type') this.type = newVal;
         if (attrName == 'size') this.size = newVal;
         if (attrName == 'name') this.name = newVal;
         if (attrName == 'value') this.value = newVal;
         if (attrName == 'placeholder') this.placeholder = newVal;
-        if (attrName == 'extendable') this.extendable = this.hasAttribute('extendable') ? true : false;
-        if (attrName == 'sorted') this.sorted = this.hasAttribute('sorted') ? true : false;
+        if (attrName == 'extendable') this.extendable = this.hasAttribute('extendable');
+        if (attrName == 'sorted') this.sorted = this.hasAttribute('sorted');
+        if (attrName == 'disabled') this.disabled = this.hasAttribute('disabled');
     }
 
 
@@ -376,13 +444,17 @@ class Combobox extends HTMLElement {
      * @param {event} evt The input event of the input element.
      */
     onInput(evt) {
-        const searchFor = evt.target.value.toLowerCase(), 
-              arrMatches = [],
-              plus = this.getElement('svgPlus');
-        this.dropdownCollapse();
+        if (this.disabled) {
+            evt.preventDefault();
+            this.input.value = '';
+            return;
+        }
+        const searchFor = evt.target.value.toLowerCase(),
+              arrMatches = [];
+        this.collapse();
         this.showButton(false);
         if (searchFor.length == 0) {
-            if (this.options) this.showButton('arrow');
+            if (this.options?.length > 0) this.showButton('arrow');
             return;
         }
         if (!this.options) {
@@ -405,8 +477,9 @@ class Combobox extends HTMLElement {
             this.#listindex = -1;
             return;
         }
-        this.showButton('arrow');
-        this.dropdownShow(arrMatches);        
+        const icon = (arrMatches.length > 0) ? 'arrow' : false;
+        this.showButton(icon);
+        this.expand(arrMatches);
     }
 
 
@@ -420,22 +493,50 @@ class Combobox extends HTMLElement {
             if (this.#options == null) {
                 this.#options = new Array(item);
             } else if (!this.#options.includes(item)) {
-                this.#options.push(item);                
+                this.#options.push(item);
             }
             this.showButton('arrow');
         }
-        this.dropdownCollapse();
+        this.collapse();
+    }
+
+    /**
+     * Removes an existing list item from the options.
+     * @param {Event | String | Number} item list item to be removed.
+     */
+    removeListItem(item) {
+        if (item instanceof Event) {
+            const index = item.currentTarget.dataset.index;
+            this.#options.splice(index, 1);
+        } else if (typeof item === 'string') {
+            const index = this.#options.indexOf(item);
+            if (index > -1) this.#options.splice(index, 1);
+        } else if (typeof item === 'number') {
+            if (item < this.#options.length) {
+                this.#options.splice(item, 1);
+            }
+        }
+
+        if (this.isDropped) this.expand();
+        if (this.#options.length == 0) {
+            this.value = '';
+            this.showButton(false);
+        }
     }
 
 
     /**
      * Toggles the dropdown list.
      */
-    onArrowClick() {
+    onArrowClick(evt) {
+        if (this.disabled) return;
+        evt.stopPropagation();
         if (this.isDropped) {
-            this.dropdownCollapse();            
+            this.collapse();
         } else {
-            this.dropdownShow(this.#options);            
+            this.expand();
+            this.input.setSelectionRange(0,0);
+            this.#highlightSelectedItem(this.input.value);
         }
     }
 
@@ -448,27 +549,28 @@ class Combobox extends HTMLElement {
      * - ESCAPE closes the open dropdown list. <br>
      * @param {event} evt Keydown event of the input element.
      */
-    // TODO implementing DEL-key to delete an item! 
-    // ==> also adding an X-button on each item to support mouse events and mobile devices.
-    onKeydown(evt) {    
+    onKeydown(evt) {
+        if (this.disabled) return;
         const key = evt.key;
-        if (key == 'Enter') {
-            if (!this.isDropped) {
-                this.addListItem();
-            } else if (this.selectedItem) {
-                this.getElement(inpID).value = this.selectedItem.innerText;
-                this.dropdownCollapse();
-                this.#internals.setFormValue(this.value, this.value);
-            }
-        } 
         if (this.isDropped) {
-            if (key == 'Escape') this.dropdownCollapse();
+            if (key === 'Escape') this.collapse();
             if (key.includes('Arrow')) {
                 evt.preventDefault();
                 this.#scroll(key);
-                
-            }             
-        }       
+            }
+            if (key === 'Enter' && this.selectedItem) {
+                this.input.value = this.selectedItem.innerText;
+                this.collapse();
+                this.#internals.setFormValue(this.value, this.value);
+            }
+        } else {
+            if (key === 'Enter') this.addListItem();
+            if (key === 'ArrowDown') {
+                this.expand();
+                this.#highlightSelectedItem(this.input.value);
+            }
+        }
+        if (key === 'Delete') this.input.value = '';
     }
 
 
@@ -476,9 +578,12 @@ class Combobox extends HTMLElement {
      * Takes over the active list-item in the input field.
      */
     onItemClick(evt) {
-        this.getElement(inpID).value = evt.target.innerText;
-        this.#internals.setFormValue(this.value, this.value);
-        this.dropdownCollapse();
+        if (evt.target.nodeName === 'LI') {
+            this.input.value = evt.target.innerText;
+            this.#internals.setFormValue(this.value, this.value);
+            this.collapse();
+            this.input.blur();
+        }
     }
 
 
@@ -486,10 +591,11 @@ class Combobox extends HTMLElement {
      * Displays the selected item and synchronisizes the list-index.
      */
     onMouseHover(evt) {
+        if (evt.target.nodeName !== 'LI') return; // ignore the cross!
         if (this.selectedItem) this.selectedItem.removeAttribute('selected');
         evt.target.setAttribute('selected','');
         const list = this.shadowRoot.querySelectorAll('li.jom-list-item');
-        this.#listindex = -1;        
+        this.#listindex = -1;
         do {
             this.#listindex++;
         } while (!list[this.#listindex].hasAttribute('selected'));
@@ -501,14 +607,14 @@ class Combobox extends HTMLElement {
      * @param {string | boolean} type The button to be displayed or disabled.
      */
     showButton(type) {
-        const arrow = this.getElement('svgArrow'),
-              plus = this.getElement('svgPlus');
+        const arrow = this.getElement('divArrow'),
+              plus = this.getElement('divPlus');
         if (!(arrow && plus)) return;
         if (type === 'arrow') {
             arrow.removeAttribute('hidden');
             plus.setAttribute('hidden','');
-        } else if (type === 'plus') {       
-            plus.removeAttribute('hidden');   
+        } else if (type === 'plus') {
+            plus.removeAttribute('hidden');
             arrow.setAttribute('hidden','');
         } else if (type === false) {
             arrow.setAttribute('hidden','');
@@ -520,20 +626,28 @@ class Combobox extends HTMLElement {
     /**
      * Shows the dropdown list.<br>
      * The method is called either by click on the arrow button
-     * or by input in the field. 
+     * or by input in the field.
      * @param {string | string[]} options String array of options to be displayed in the dropdown list.
      */
-    dropdownShow(options) {
-        this.dropdownCollapse();
+    expand(options = this.#options) {
+        this.collapse();
         this.isDropped = (options.length > 0);
         const items = (this.sorted) ? options.sort() : options;
         for (let i = 0; i < items.length; i++) {
             const item = document.createElement('li');
+            let cross;
+            if (this.extendable && this.type === 'combo') {
+                cross = document.createElement('div');
+                cross.append(TMP_CLOSE.content.cloneNode(true));
+                this.setAttributes(cross, {"data-index": i, class: "combo-delete"});
+                cross.addEventListener('click', (evt) => this.removeListItem(evt));
+            }
             item.className = 'jom-list-item';
             item.innerText = items[i];
+            if (cross) item.appendChild(cross);
             item.addEventListener('click', (evt) => this.onItemClick(evt));
-            item.addEventListener('mousemove', (evt) => this.onMouseHover(evt));
-            this.list.appendChild(item);            
+            item.addEventListener('pointermove', (evt) => this.onMouseHover(evt));
+            this.list.appendChild(item);
             if (i >= this.size - 1 && !this.list.classList.contains('scroll')) {
                 const height = item.clientHeight * this.size + 1;
                 this.list.classList.add('scroll');
@@ -546,7 +660,7 @@ class Combobox extends HTMLElement {
     /**
      * Closes the dropdown list and set's the flag 'isDropped' to false.
      */
-    dropdownCollapse() {
+    collapse() {
         this.list.innerHTML = '';
         this.list.classList.remove('scroll');
         this.isDropped = false;
@@ -567,6 +681,20 @@ class Combobox extends HTMLElement {
 
 
     /**
+     * Private method.<br>
+     * Highlightes the current selected item after expanding the dropdown list.
+     */
+    #highlightSelectedItem(item) {
+        if (item == '') return;
+        const list = this.shadowRoot.querySelectorAll('li.jom-list-item');
+        this.#listindex = this.#options.indexOf(item);
+        if (this.#listindex > -1) {
+            list[this.#listindex].scrollIntoView({block: 'center'});
+            list[this.#listindex].setAttribute('selected','');            
+        }
+    }
+
+    /**
      * Creates the component's child elements:<br>
      * - div (wrapper)
      * - imput element
@@ -579,12 +707,12 @@ class Combobox extends HTMLElement {
               input = document.createElement('input'),
               list = document.createElement('ul');
         this.setAttributes(wrapper, {id: 'divCombo', class: 'jom-combo'});
-        this.setAttributes(input, {type: 'text', id: inpID, class: 'jom-input', autocomplete: 'off'});
+        this.setAttributes(input, {type: 'text', id: 'inpCombo', class: 'jom-input', autocomplete: 'off'});
         this.setAttributes(list, {id: 'lstCombo', class: 'cbo-list'});        
         wrapper.append(input, list,
                        TMP_PLUSSIGN.content.cloneNode(true),
                        TMP_ARROW.content.cloneNode(true));
-        this.shadowRoot.append(wrapper,TMP_COMBOSTYLE.content.cloneNode(true));
+        this.shadowRoot.append(wrapper, TMP_COMBOSTYLE.content.cloneNode(true));
     }
 
 
@@ -611,10 +739,10 @@ class Combobox extends HTMLElement {
     /**
      * Updates all HTML-given attributes after connectedCallback!
      */
-    #updateProperties() { 
+    #updateProperties() {
         Object.values(this.properties).forEach((prop) => {
             if (Combobox.prototype.hasOwnProperty(prop)) {
-                let value = this[prop];                
+                let value = this[prop];
                 delete this[prop];
                 this[prop] = value;
             }
@@ -645,30 +773,33 @@ class Combobox extends HTMLElement {
 
 
     /**
-     * Checks if a given expression is true or false.
+     * Converts some specific epressions to Boolean.
      * @param {any} expression The expression to be checked for true or false
      * @returns true | false
      */
-    isBoolean(expression) {
-        if (expression === true || expression === false) return expression;
-        switch(expression?.toLowerCase()?.trim()) {
-            case 'true': 
-            case 'yes':
-            case 'on':
-            case '1': 
-                return true;
-            case 'false': 
-            case 'no': 
-            case 'off':
-            case '0': 
-            case '':
-            case null: 
-            case undefined:
-                return false;
-            default: 
-                return JSON.parse(expression);
+    toBoolean(expression) {
+        if (expression === false || expression === true) return expression;
+        if (typeof expression === 'string') {
+            expression = expression.toLowerCase().trim();
+            switch(expression) {
+                case 'true':
+                case 'yes':
+                case 'on':
+                case '1':
+                    return true;
+                case 'false':
+                case 'no':
+                case 'off':
+                case '0':
+                case '':
+                    return false;
+                default:
+                    return JSON.parse(expression);
+            }
+        } else {
+            return Boolean(expression);
         }
     }
 }
 
-customElements.define('jom-combo', Combobox);
+customElements.define('combo-box', Combobox);

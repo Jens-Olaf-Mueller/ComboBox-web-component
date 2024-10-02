@@ -16,17 +16,21 @@ function runApp() {
         combo.setAttribute('size', this.value);
     })
     document.getElementById('chkSorted').addEventListener('change', function() {
-        if (this.checked) {
-            combo.setAttribute('sorted', '');
-        } else {
-            combo.removeAttribute('sorted');
-        }
+        combo.sorted = this.checked;
+        if (combo.isDropped) combo.expand();
     })
     document.getElementById('chkAllowAdd').addEventListener('change', function() {
-        if (this.checked) {
-            combo.setAttribute('extendable', '');
-        } else {
-            combo.removeAttribute('extendable');
-        }
+        combo.extendable = this.checked;
+        combo.collapse();
     })
+
+    document.getElementsByName('combo-type').forEach(opt => {
+        opt.addEventListener('input', function() {
+            combo.setAttribute('type', this.value);
+            combo.collapse();
+        });        
+    })
+
+    document.getElementById('inpSize').value = combo.size;
+    combo.addListItem('Mexico');
 }
